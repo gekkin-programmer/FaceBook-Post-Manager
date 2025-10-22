@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy & Terms – Facebook Post Scheduler</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #f4f6f9;
+          color: #1c1e21;
+          line-height: 1.6;
+          padding: 16px;
+        }
+        .container {
+          max-width: 700px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          overflow: hidden;
+        }
+        header {
+          background: #1877f2;
+          color: white;
+          padding: 24px;
+          text-align: center;
+        }
+        header h1 { font-size: 1.5rem; font-weight: 600; }
+        .content { padding: 32px; }
+        h2 { margin: 28px 0 12px; color: #1877f2; font-size: 1.3rem; }
+        p, li { margin-bottom: 12px; font-size: 1rem; }
+        ul { padding-left: 20px; }
+        .footer {
+          text-align: center;
+          padding: 20px;
+          font-size: 0.9rem;
+          color: #65676b;
+          border-top: 1px solid #e4e6eb;
+        }
+        a { color: #1877f2; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        @media (min-width: 768px) {
+          body { padding: 32px; }
+          header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Privacy Policy & Terms of Service</h1>
+    </header>
+
+    <div class="content">
+        <p><strong>Last Updated:</strong> October 22, 2025</p>
+
+        <h2>1. Introduction</h2>
+        <p>
+            This <strong>Facebook Post Scheduler</strong> ("ABC boot ") is a private tool that allows authorized users to schedule posts on the Facebook Page
+            <strong>La Générale du Bâtiment</strong>. It is operated by <strong>a single developer </strong> (Me).
+        </p>
+        <p>
+            By using this App, you agree to this Privacy Policy and Terms of Service.
+        </p>
+
+        <h2>2. Data We Collect</h2>
+        <ul>
+            <li><strong>Message Text</strong>: The text you enter to post on Facebook.</li>
+            <li><strong>Media Files</strong>: Images or videos you upload (stored temporarily).</li>
+            <li><strong>Scheduled Time</strong>: The date and time you choose.</li>
+            <li><strong>Facebook Page Access</strong>: We use a <strong>Page Access Token</strong> to post on your behalf (never user passwords).</li>
+        </ul>
+        <p><strong>We do NOT collect:</strong> emails, names, IP addresses, or analytics.</p>
+
+        <h2>3. How We Use Your Data</h2>
+        <ul>
+            <li>To schedule and publish posts on the Facebook Page.</li>
+            <li>Media files are sent directly to Facebook and deleted from our server immediately after posting.</li>
+            <li>No data is shared with third parties except Facebook (via official API).</li>
+        </ul>
+
+        <h2>4. Data Storage & Security</h2>
+        <p>
+            The App runs on <strong>Heroku</strong> (a secure cloud platform).
+            Sensitive keys (Facebook tokens) are stored as <strong>encrypted environment variables</strong> and never in code.
+        </p>
+        <p>
+            Uploaded files are processed in memory and <strong>not saved to disk</strong>.
+            They are deleted within seconds after being sent to Facebook.
+        </p>
+
+        <h2>5. Facebook API Compliance</h2>
+        <p>
+            This App complies with the <a href="https://developers.facebook.com/policy/" target="_blank">Facebook Platform Policy</a>:
+        </p>
+        <ul>
+            <li>Only uses <code>pages_manage_posts</code> and <code>pages_read_engagement</code> permissions.</li>
+            <li>Does not store user data beyond what is needed to post.</li>
+            <li>Provides this public privacy policy.</li>
+        </ul>
+
+        <h2>6. Your Rights</h2>
+        <p>
+            You can request deletion of any scheduled post by contacting us.
+            Since no personal data is stored, there is nothing to export or erase under GDPR/CCPA.
+        </p>
+
+        <h2>7. Limitation of Liability</h2>
+        <p>
+            We are not responsible for:
+        </p>
+        <ul>
+            <li>Posts that fail due to Facebook API changes or rate limits.</li>
+            <li>Content violating Facebook Community Standards.</li>
+            <li>Delays in scheduling (we aim for ±1 minute accuracy).</li>
+        </ul>
+
+        <h2>8. Changes to This Policy</h2>
+        <p>
+            We may update this policy. Changes will be posted here with the new "Last Updated" date.
+        </p>
+
+        <h2>9. Contact Us</h2>
+        <p>
+            For support or data requests:<br>
+            Email: <a href="Nkouambrayan@gmail.com">Nkouambrayan@gmail.com</a>
+        </p>
+    </div>
+
+    <div class="footer">
+        © 2025 Pene Bryan. All rights reserved.<br>
+        <a href="index.html">← Back to Scheduler</a>
+    </div>
+</div>
+</body>
+</html>

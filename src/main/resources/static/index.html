@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schedule Post</title>
+    <style>
+        /* Mobile-First Reset */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #f4f6f9;
+          color: #1c1e21;
+          line-height: 1.5;
+          padding: 16px;
+          min-height: 100vh;
+        }
+
+        .container {
+          max-width: 500px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          overflow: hidden;
+        }
+
+        header {
+          background: #1877f2;
+          color: white;
+          padding: 20px;
+          text-align: center;
+        }
+
+        header h1 {
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+
+        .form-container {
+          padding: 24px;
+        }
+
+        label {
+          display: block;
+          margin: 16px 0 6px;
+          font-size: 0.95rem;
+          font-weight: 500;
+          color: #333;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        input[type="datetime-local"],
+        select {
+          width: 100%;
+          padding: 12px;
+          border: 1.5px solid #ddd;
+          border-radius: 8px;
+          font-size: 1rem;
+          background: #fafafa;
+          transition: border 0.2s;
+        }
+
+        input:focus, select:focus {
+          outline: none;
+          border-color: #1877f2;
+          background: white;
+        }
+
+        .file-input {
+          position: relative;
+          overflow: hidden;
+          display: inline-block;
+          width: 100%;
+        }
+
+        .file-input input[type=file] {
+          position: absolute;
+          left: -9999px;
+        }
+
+        .file-input-label {
+          display: block;
+          padding: 12px;
+          background: #f0f2f5;
+          border: 1.5px dashed #ccd0d5;
+          border-radius: 8px;
+          text-align: center;
+          cursor: pointer;
+          font-size: 0.95rem;
+          color: #606770;
+          transition: all 0.2s;
+        }
+
+        .file-input-label:hover {
+          background: #e4e6eb;
+        }
+
+        .file-input-label::after {
+          content: "Choose Image/Video";
+        }
+
+        .file-input input:focus + .file-input-label {
+          border-color: #1877f2;
+        }
+
+        .file-name {
+          margin-top: 8px;
+          font-size: 0.85rem;
+          color: #1877f2;
+          word-break: break-all;
+        }
+
+        button {
+          width: 100%;
+          margin-top: 24px;
+          padding: 14px;
+          background: #1877f2;
+          color: white;
+          font-size: 1.1rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        button:hover {
+          background: #166fe5;
+        }
+
+        button:disabled {
+          background: #9cb4d8;
+          cursor: not-allowed;
+        }
+
+        .result {
+          margin-top: 20px;
+          padding: 12px;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          text-align: center;
+        }
+
+        .success { background: #e3fcec; color: #1877f2; border: 1px solid #a3e8c3; }
+        .error   { background: #fce8e6; color: #d32f2f; border: 1px solid #f5c2c7; }
+
+        .note {
+          font-size: 0.8rem;
+          color: #65676b;
+          margin-top: 4px;
+        }
+
+        /* Tablet & Desktop */
+        @media (min-width: 768px) {
+          body { padding: 32px; }
+          .container { border-radius: 20px; }
+          header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Post Manager</h1>
+    </header>
+
+    <div class="form-container">
+        <form id="scheduleForm" enctype="multipart/form-data">
+            <label for="message">Message (Pas obliger)</label>
+            <input type="text" id="message" name="message" placeholder="Votre message ?" />
+
+            <label>Media (image ou video)</label>
+            <div class="file-input">
+                <input type="file" id="media" name="media" accept="image/*,video/*" />
+                <label for="media" class="file-input-label"></label>
+            </div>
+            <div class="file-name" id="fileName"></div>
+
+            <label for="mediaType">Tyep de Media</label>
+            <select id="mediaType" name="mediaType">
+                <option value="">-- Choisi le type de media apres import --</option>
+                <option value="IMAGE">Image</option>
+                <option value="VIDEO">Video</option>
+            </select>
+
+            <label for="scheduledTime"> Heure de Post *</label>
+            <input type="datetime-local" id="scheduledTime" name="scheduledTime" required />
+            <div class="note">Dois etre dans le future</div>
+
+            <button type="submit" id="submitBtn">publication programmée</button>
+        </form>
+
+        <div id="result"></div>
+        <div style="text-align: center; margin-top: 24px; font-size: 0.85rem; color: #65676b;">
+            <a href="Privacy.html" style="color: #1877f2;">Privacy Policy & Terms</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('scheduleForm');
+    const fileInput = document.getElementById('media');
+    const fileName = document.getElementById('fileName');
+    const mediaType = document.getElementById('mediaType');
+    const submitBtn = document.getElementById('submitBtn');
+    const result = document.getElementById('result');
+
+    // Show selected file name
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileName.textContent = fileInput.files[0].name;
+        // Auto-select media type based on extension
+        const ext = fileInput.files[0].name.split('.').pop().toLowerCase();
+        if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
+          mediaType.value = 'IMAGE';
+        } else if (['mp4','mov','avi','webm'].includes(ext)) {
+          mediaType.value = 'VIDEO';
+        }
+      } else {
+        fileName.textContent = '';
+        mediaType.value = '';
+      }
+    });
+
+    // Form submit with AJAX
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Scheduling...';
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch('/schedule-post', {
+          method: 'POST',
+          body: formData
+        });
+
+        const text = await res.text();
+        result.innerHTML = `<div class="result success">${text}</div>`;
+      } catch (err) {
+        result.innerHTML = `<div class="result error">Error: ${err.message}</div>`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Schedule Post';
+      }
+    });
+
+    // Set min datetime to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('scheduledTime').min = now.toISOString().slice(0, 16);
+</script>
+</body>
+</html>
