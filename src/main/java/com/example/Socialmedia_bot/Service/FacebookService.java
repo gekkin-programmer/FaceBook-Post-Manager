@@ -6,6 +6,8 @@ import com.restfb.BinaryAttachment;
 import com.restfb.FacebookClient;
 import com.restfb.Parameter;
 import com.restfb.types.FacebookType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -149,29 +153,24 @@ public class FacebookService {
         }
     }
 
+
+    private static final Logger log = LoggerFactory.getLogger(FacebookService.class);
+
     public void checkAndPostScheduledPosts() {
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("UTC"));
+        log.info("CHECKING POSTS – NOW: {}", now);
+
         synchronized (scheduledPosts) {
             List<ScheduledPost> toRemove = new ArrayList<>();
-            for (ScheduledPost post : scheduledPosts) {
-                if (!post.isPosted() && !now.isBefore(post.getScheduledTime())) {
-                    try {
-                        String result;
-                        if (post.getMediaType() == null) {
-                            result = postMessage(post.getMessage());
-                        } else if ("image".equalsIgnoreCase(post.getMediaType())) {
-                            result = postImageFromBytes(post.getMedia(), post.getMessage());
-                        } else if ("video".equalsIgnoreCase(post.getMediaType())) {
-                            result = postVideoFromBytes(post.getMedia(), post.getMessage());
-                        } else {
-                            result = "Error: Invalid media type";
-                        }
-                        post.setPosted(true);
-                        toRemove.add(post);
-                        System.out.println("Scheduled post executed: ID " + post.getId() + ", Result: " + result);
-                    } catch (Exception e) {
-                        System.err.println("Error executing scheduled post ID " + post.getId() + ": " + e.getMessage());
-                    }
+            for (ScheduledPost p : scheduledPosts) {
+                if (!p.isPosted() && !now.isBefore(p.getScheduledTime())) {
+                    log.info("POSTING ID {}: {}", p.getId(), p.getMessage());
+                    String result = postMessage(p.getMessage()); // or image/video
+                    log.info("RESULT: {}", result);
+                    p.setPosted(true);
+                    toRemove.add(p);
+                } else {
+                    log.debug("SKIPPED ID {} – scheduled for {}", p.getId(), p.getScheduledTime());
                 }
             }
             scheduledPosts.removeAll(toRemove);
