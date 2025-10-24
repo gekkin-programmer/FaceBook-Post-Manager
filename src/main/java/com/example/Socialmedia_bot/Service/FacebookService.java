@@ -123,13 +123,14 @@ public class FacebookService {
         }
     }
 
-    public String schedulePost(String message, MultipartFile media, String mediaType, java.time.LocalDateTime scheduledTime) {
+    public String schedulePost(String message, MultipartFile media, String mediaType, LocalDateTime scheduledTime) {
         try {
             ScheduledPost post = new ScheduledPost();
             post.setId(idGenerator.getAndIncrement());
             post.setMessage(message);
             post.setMediaType(mediaType);
-            post.setScheduledTime(scheduledTime);
+            // Ensure scheduledTime is interpreted in WAT (Africa/Lagos) timezone
+            post.setScheduledTime(scheduledTime.atZone(ZoneId.of("Africa/Lagos")).toLocalDateTime());
             post.setPosted(false);
 
             if (media != null && !media.isEmpty()) {
@@ -146,7 +147,7 @@ public class FacebookService {
             synchronized (scheduledPosts) {
                 scheduledPosts.add(post);
             }
-            return "Post scheduled successfully! ID: " + post.getId() + ", Scheduled Time: " + scheduledTime;
+            return "Post scheduled successfully! ID: " + post.getId() + ", Scheduled Time: " + scheduledTime + " WAT";
         } catch (IOException e) {
             e.printStackTrace();
             return "Error scheduling post: " + e.getMessage();
@@ -157,20 +158,21 @@ public class FacebookService {
     private static final Logger log = LoggerFactory.getLogger(FacebookService.class);
 
     public void checkAndPostScheduledPosts() {
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("UTC"));
-        log.info("CHECKING POSTS – NOW: {}", now);
+        ZoneId wat = ZoneId.of("Africa/Lagos");
+        LocalDateTime now = LocalDateTime.now(wat);
+        log.info("CHECKING POSTS – NOW: {} (WAT)", now);
 
         synchronized (scheduledPosts) {
             List<ScheduledPost> toRemove = new ArrayList<>();
             for (ScheduledPost p : scheduledPosts) {
                 if (!p.isPosted() && !now.isBefore(p.getScheduledTime())) {
                     log.info("POSTING ID {}: {}", p.getId(), p.getMessage());
-                    String result = postMessage(p.getMessage()); // or image/video
+                    String result = postMessage(p.getMessage());
                     log.info("RESULT: {}", result);
                     p.setPosted(true);
                     toRemove.add(p);
                 } else {
-                    log.debug("SKIPPED ID {} – scheduled for {}", p.getId(), p.getScheduledTime());
+                    log.debug("SKIPPED ID {} – scheduled: {}", p.getId(), p.getScheduledTime());
                 }
             }
             scheduledPosts.removeAll(toRemove);
