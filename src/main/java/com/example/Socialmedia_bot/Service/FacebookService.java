@@ -24,13 +24,32 @@ public class FacebookService {
     private final List<ScheduledPost> scheduledPosts = new ArrayList<>();
     private final AtomicLong idGenerator = new AtomicLong(1);
 
-    @Value("${facebook.page.id}")
+    @Value("${facebook.page.id:}")
     private String pageId;
 
-    @Autowired
     public FacebookService(FacebookClient facebookClient) {
         this.facebookClient = facebookClient;
+
+// 1. Try -D system property
+        String sysId = System.getProperty("facebook.page.id");
+        if (sysId != null && !sysId.isEmpty()) {
+            this.pageId = sysId;
+        }
+        // 2. Try @Value from properties
+        else if (this.pageId == null || this.pageId.isEmpty()) {
+            this.pageId = System.getenv("FACEBOOK_PAGE_ID");
+        }
+
+        if (pageId == null || pageId.isEmpty()) {
+            throw new IllegalStateException(
+                    "facebook.page.id is not set!\n" +
+                            "  • Use: java -Dfacebook.page.id=112408564785128 ...\n" +
+                            "  • Or set env: FACEBOOK_PAGE_ID=112408564785128\n" +
+                            "  • Or hardcode in application.properties"
+            );
+        }
         System.out.println("Initializing FacebookService with FacebookClient: " + (facebookClient != null ? "present" : "null"));
+        System.out.println("Page ID: " + (pageId != null ? pageId : "null"));
     }
 
     public String postMessage(String message) {

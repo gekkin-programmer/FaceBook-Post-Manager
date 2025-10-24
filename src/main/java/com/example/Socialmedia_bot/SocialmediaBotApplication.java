@@ -15,12 +15,13 @@ public class SocialmediaBotApplication {
         this.facebookService = facebookService;
     }
 
-	public static void main(String[] args) {
-		SpringApplication.run(SocialmediaBotApplication.class, args);
-	}
-
-    @Scheduled(fixedRate = 86400000)
-    public void checkScheduledPosts(){
+    public static void main(String[] args) {
+        SpringApplication.run(SocialmediaBotApplication.class, args);
+    }
+    @Scheduled(fixedRateString = "${app.scheduler.interval:86400000}")
+    public void checkScheduledPosts() {
+        System.out.println("=== SCHEDULER RUNNING NOW ===");
         facebookService.checkAndPostScheduledPosts();
+
     }
 }
