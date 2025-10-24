@@ -8,8 +8,10 @@ public class ScheduledPost {
     private String message;
     private byte[] media;
     private String mediaType;
+    private String mediaContentType;
     private LocalDateTime scheduledTime;
     private boolean posted;
+    private String facebookPostId;
 
     public Long getId() {
         return id;
@@ -57,5 +59,15 @@ public class ScheduledPost {
 
     public void setPosted(boolean posted) {
         this.posted = posted;
+    }
+
+    public void setMediaContentType(String mediaContentType) { this.mediaContentType = mediaContentType; }
+
+    public void setFacebookPostId(String facebookPostId) { this.facebookPostId = facebookPostId; }
+
+    public String getMediaContentType() {
+    }
+
+    public String getFacebookPostId() {
     }
 }
