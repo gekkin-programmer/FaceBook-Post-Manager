@@ -30,14 +30,13 @@ public class SocialmediaBotApplication {
 
     @Scheduled(fixedRateString = "${app.scheduler.interval:86400000}")
     public void checkScheduledPosts() {
-        ZoneId wat = ZoneId.of("Africa/Lagos");
-        LocalDateTime now = LocalDateTime.now(wat);
-        log.info("=== SCHEDULER TRIGGERED AT {} (WAT) ===", now);
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("UTC"));
+        log.info("=== SCHEDULER TRIGGERED AT {} (UTC) ===", now);
         try {
             facebookService.checkAndPostScheduledPosts();
-            log.info("Scheduler check completed.");
+            log.info("Scheduler check completed successfully.");
         } catch (Exception e) {
-            log.error("Error in scheduler", e);
+            log.error("Error during scheduled post check", e);
         }
     }
 }

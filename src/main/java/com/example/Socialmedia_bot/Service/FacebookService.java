@@ -1,20 +1,6 @@
 package com.example.Socialmedia_bot.Service;
 
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.*;
-import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.util.Map;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-
 import com.example.Socialmedia_bot.model.ScheduledPost;
 import com.restfb.BinaryAttachment;
 import com.restfb.FacebookClient;
@@ -24,11 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -141,100 +123,34 @@ public class FacebookService {
         }
     }
 
-    @Component
-    public class ScheduledPostExecutor {
-        private final RestTemplate restTemplate = new RestTemplate();
-        @Value("${facebook.page.access-token}")
-        private String pageAccessToken;
-        @Value("${facebook.page.id}")
-        private String pageId;
+    public String schedulePost(String message, MultipartFile media, String mediaType, LocalDateTime scheduledTime) {
+        try {
+            ScheduledPost post = new ScheduledPost();
+            post.setId(idGenerator.getAndIncrement());
+            post.setMessage(message);
+            post.setMediaType(mediaType);
+            // Ensure scheduledTime is interpreted in WAT (Africa/Lagos) timezone
+            post.setScheduledTime(scheduledTime.atZone(ZoneId.of("Africa/Lagos")).toLocalDateTime());
+            post.setPosted(false);
 
-        public void executeScheduledPost(ScheduledPost post) {
-            if (post.isPosted() || post.getScheduledTime().isAfter(LocalDateTime.now(ZoneId.of("Africa/Lagos")))) {
-                System.out.println("Skipping post ID " + post.getId() + ": Already posted or not due yet.");
-                return;
+            if (media != null && !media.isEmpty()) {
+                if ("image".equalsIgnoreCase(mediaType) && !media.getContentType().startsWith("image/")) {
+                    throw new IllegalArgumentException("File must be an image (e.g., JPEG, PNG)");
+                } else if ("video".equalsIgnoreCase(mediaType) && !media.getContentType().startsWith("video/")) {
+                    throw new IllegalArgumentException("File must be a video (e.g., MP4, MOV)");
+                }
+                post.setMedia(media.getBytes());
+            } else if ("image".equalsIgnoreCase(mediaType) || "video".equalsIgnoreCase(mediaType)) {
+                throw new IllegalArgumentException("Media file required for " + mediaType + " post");
             }
 
-            try {
-                String photoId = null;
-                // Step 1: Upload image to /photos endpoint if present
-                if (post.getMedia() != null && post.getMedia().length > 0 && "image".equalsIgnoreCase(post.getMediaType())) {
-                    if (post.getMediaContentType() == null || !post.getMediaContentType().startsWith("image/")) {
-                        throw new IllegalStateException("Invalid image content type: " + post.getMediaContentType());
-                    }
-
-                    String photoUrl = "https://graph.facebook.com/v19.0/" + pageId + "/photos";
-                    HttpHeaders photoHeaders = new HttpHeaders();
-                    photoHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
-                    MultiValueMap<String, Object> photoBody = new LinkedMultiValueMap<>();
-
-                    // Image upload
-                    HttpHeaders imageHeaders = new HttpHeaders();
-                    imageHeaders.setContentType(MediaType.parseMediaType(post.getMediaContentType()));
-                    ByteArrayResource imageResource = new ByteArrayResource(post.getMedia()) {
-                        @Override
-                        public String getFilename() {
-                            return "post-image." + post.getMediaContentType().split("/")[1];
-                        }
-                    };
-                    photoBody.add("source", imageResource);
-                    photoBody.add("access_token", pageAccessToken);
-                    photoBody.add("published", "false"); // Unpublished photo for scheduled post
-
-                    HttpEntity<MultiValueMap<String, Object>> photoRequest = new HttpEntity<>(photoBody, photoHeaders);
-                    ResponseEntity<Map> photoResponse = restTemplate.postForEntity(photoUrl, photoRequest, Map.class);
-
-                    if (photoResponse.getStatusCode() == HttpStatus.OK && photoResponse.getBody().containsKey("id")) {
-                        photoId = photoResponse.getBody().get("id").toString();
-                        System.out.println("Image uploaded successfully, Photo ID: " + photoId);
-                    } else {
-                        throw new RuntimeException("Failed to upload image: " + photoResponse.getBody());
-                    }
-                }
-
-                // Step 2: Schedule the post with message and optional photo ID
-                String feedUrl = "https://graph.facebook.com/v19.0/" + pageId + "/feed";
-                HttpHeaders feedHeaders = new HttpHeaders();
-                feedHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                MultiValueMap<String, Object> feedBody = new LinkedMultiValueMap<>();
-
-                // Add message
-                feedBody.add("message", post.getMessage());
-
-                // Add photo ID if available
-                if (photoId != null) {
-                    feedBody.add("object_attachment", photoId); // Attach uploaded photo
-                }
-
-                // Scheduling (WAT to UTC Unix timestamp)
-                long scheduledUnixTime = post.getScheduledTime()
-                        .atZone(ZoneId.of("Africa/Lagos"))
-                        .withZoneSameInstant(ZoneId.of("UTC"))
-                        .toInstant()
-                        .toEpochMilli() / 1000;
-                feedBody.add("scheduled_publish_time", scheduledUnixTime);
-                feedBody.add("published", "false"); // Schedule the post
-                feedBody.add("access_token", pageAccessToken);
-                feedBody.add("privacy", "{\"value\":\"EVERYONE\"}");
-
-                HttpEntity<MultiValueMap<String, Object>> feedRequest = new HttpEntity<>(feedBody, feedHeaders);
-                ResponseEntity<Map> feedResponse = restTemplate.postForEntity(feedUrl, feedRequest, Map.class);
-
-                if (feedResponse.getStatusCode() == HttpStatus.OK) {
-                    post.setPosted(true);
-                    post.setFacebookPostId(feedResponse.getBody().get("id").toString());
-                    System.out.println("Post scheduled successfully! Facebook Post ID: " + post.getFacebookPostId() +
-                            ", Scheduled Time: " + post.getScheduledTime() + " WAT");
-                } else {
-                    System.err.println("Facebook API Error (Feed): " + feedResponse.getBody());
-                }
-            } catch (HttpClientErrorException e) {
-                System.err.println("Facebook API Error: Status " + e.getStatusCode() + ", Response: " + e.getResponseBodyAsString());
-                e.printStackTrace();
-            } catch (Exception e) {
-                System.err.println("Error scheduling post to Facebook: " + e.getMessage());
-                e.printStackTrace();
+            synchronized (scheduledPosts) {
+                scheduledPosts.add(post);
             }
+            return "Post scheduled successfully! ID: " + post.getId() + ", Scheduled Time: " + scheduledTime + " WAT";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error scheduling post: " + e.getMessage();
         }
     }
 
