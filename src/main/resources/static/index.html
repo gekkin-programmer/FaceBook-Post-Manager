@@ -233,7 +233,7 @@
       const formData = new FormData(form);
 
       try {
-        const res = await fetch('/schedule-post', {
+        const res = await fetch('/api/facebook/schedule', {
           method: 'POST',
           body: formData
         });
